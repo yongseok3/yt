@@ -27,15 +27,17 @@ class GizmoDataset(GadgetHDF5Dataset):
 
     @classmethod
     def _is_valid(self, *args, **kwargs):
-        need_groups = ['Header']
+        key_metal = '/PartType0/Metallicity'
+        need_groups = ['Header', key_metal]
         veto_groups = ['FOF', 'Group', 'Subhalo']
         valid = True
         try:
             fh = h5py.File(args[0], mode='r')
             valid = all(ng in fh["/"] for ng in need_groups) and \
-              not any(vg in fh["/"] for vg in veto_groups)
-            dmetal = "/PartType0/Metallicity"
-            if dmetal not in fh or fh[dmetal].shape[1] < 11:
+                not any(vg in fh["/"] for vg in veto_groups)
+            num_metal = fh[key_metal].shape[1]
+            flag_metals = fh['Header'].attrs['Flag_Metals']
+            if num_metal != flag_metals or num_metal < 11:
                 valid = False
             fh.close()
         except:
